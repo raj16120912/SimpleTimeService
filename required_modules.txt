@@ -1,0 +1,2 @@
+#Note we can directly mention the module inside the Dockerfile, but fetching from a separate file makes it easier to add more modules in the future if needed
+flask

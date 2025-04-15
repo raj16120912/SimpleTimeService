@@ -15,7 +15,7 @@ def home():
     else:
         ip_address = request.remote_addr
 
-    # Return a simple HTML response
+    # Return response in Json format
     return jsonify({
         'timestamp': timestamp,
         'ip_address': ip_address

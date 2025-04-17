@@ -7,12 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-
-  build:
-
+  publish_images:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file app/Dockerfile --tag raj16120912/simpletimeservice:$(date +%s)
+      run: docker build ./app/ -t raj16120912/simpletimeservice:$(date +%s)
+    - name: Push Image to Docker Hub
+      run: |
+        docker login -u raj16120912 -p ${{ secrets.DOCKER_HUB_TOKEN }}
+        docker push raj16120912/simpletimeservice:$(date +%s)

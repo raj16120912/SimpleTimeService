@@ -36,20 +36,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 1.0.1
+          terraform_version: 1.11.4
           terraform_wrapper: false
 
       - name: Terraform Format
         id: fmt
-        run: echo "terraform fmt -check"
+        run: terraform fmt -check
 
       - name: Terraform Init
         id: init
-        run: echo "terraform init"
+        run: terraform init
 
       - name: Terraform Plan
         id: plan
-        run: echo "terraform plan -no-color"
+        run: terraform plan -no-color
 
       - name: Terraform Apply
-        run: echo "terraform apply -auto-approve"
+        run: terraform apply -auto-approve

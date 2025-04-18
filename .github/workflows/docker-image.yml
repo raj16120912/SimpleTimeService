@@ -35,8 +35,8 @@ jobs:
       id: set-image-uri
       run: |
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
-        echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+        IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
+        echo "image_uri=$IMAGE_URI"
 
     - name: Build, Tag and Push the Image to AWS ECR
       id: build-image

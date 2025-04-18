@@ -6,9 +6,17 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  ECR_REPOSITORY: simpleregistry
+  IMAGE_TAG: latest
+
 jobs:
   publish_images:
     runs-on: ubuntu-latest
+    outputs:
+      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -24,12 +32,15 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Set Image URI
+      id: set-image-uri
+      run: |
+        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
+        echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
     - name: Build, Tag and Push the Image to AWS ECR
       id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: simpleregistry
-        IMAGE_TAG: latest
       run: |
         docker build ./app/ -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -67,4 +78,4 @@ jobs:
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var="image_uri=${{ needs.build.outputs.image_uri }}"

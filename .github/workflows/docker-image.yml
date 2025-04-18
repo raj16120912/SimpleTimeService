@@ -8,7 +8,6 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
   ECR_REPOSITORY: simpleregistry
   IMAGE_TAG: latest
 
@@ -36,11 +35,13 @@ jobs:
       id: set-image-uri
       run: |
         ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
+        IMAGE_URI="$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
         echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     - name: Build, Tag and Push the Image to AWS ECR
       id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
         docker build ./app/ -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
@@ -78,4 +79,4 @@ jobs:
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="image_uri=${{ needs.build.outputs.image_uri }}"
+        run: terraform apply -auto-approve -var="image_uri=${{ needs.publish_images.outputs.image_uri }}"

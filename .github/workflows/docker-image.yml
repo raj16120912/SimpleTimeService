@@ -32,7 +32,7 @@ jobs:
         IMAGE_TAG: latest
       run: |
         docker build ./app/ -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push raj16120912/simpletimeservice:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
   run_terraform:
     name: "Terraform"

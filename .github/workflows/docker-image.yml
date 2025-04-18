@@ -14,8 +14,6 @@ env:
 jobs:
   publish_images:
     runs-on: ubuntu-latest
-    outputs:
-      image_uri: ${{ steps.set-image-uri.outputs.image_uri }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -25,18 +23,11 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: us-east-1
+        aws-region: ${{ vars.AWS_REGION }}
 
     - name: Login to AWS ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
-
-    - name: Set Image URI
-      id: set-image-uri
-      run: |
-        ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
-        echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     - name: Build, Tag and Push the Image to AWS ECR
       id: build-image
@@ -51,9 +42,7 @@ jobs:
     needs: publish_images
     runs-on: ubuntu-latest
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      IMAGE_URI: ${{ needs.publish_images.outputs.image_uri }}
+      ECR_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
     defaults:
       run:
         working-directory: terraform
@@ -77,7 +66,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: echo "terraform plan -no-color -var="image_uri=$IMAGE_URI"
+        run: echo "terraform plan -no-color -var="image_uri=$ECR_IMAGE"
 
       - name: Terraform Apply
-        run: echo "terraform apply -auto-approve -var="image_uri=$IMAGE_URI"
+        run: echo "terraform apply -auto-approve -var="image_uri=$ECR_IMAGE"

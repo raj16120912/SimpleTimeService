@@ -79,4 +79,4 @@ jobs:
         run: terraform plan -no-color
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="image_uri=${{ needs.publish_images.outputs.image_uri }}"
+        run: echo "terraform apply -auto-approve -var=\"image_uri=${{ needs.publish_images.outputs.image_uri }}\""

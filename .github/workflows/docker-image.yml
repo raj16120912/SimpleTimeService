@@ -68,7 +68,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: echo "terraform plan -no-color -var="image_uri=$ECR_IMAGE"
+        run: terraform plan -no-color -var="image_uri=$ECR_IMAGE"
 
       - name: Terraform Apply
-        run: echo "terraform apply -auto-approve -var="image_uri=$ECR_IMAGE"
+        run: terraform apply -auto-approve -var="image_uri=$ECR_IMAGE"

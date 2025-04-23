@@ -15,7 +15,8 @@ resource "aws_security_group" "lambda_sg" {
 resource "aws_iam_role" "access_for_lambda" {
   name = "access-for-lambda"
 
-  assume_role_policy = jsondecode({
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
@@ -24,7 +25,6 @@ resource "aws_iam_role" "access_for_lambda" {
       }
     }]
   })
-
 }
 
 resource "aws_iam_policy_attachment" "lambda_access" {
@@ -55,4 +55,30 @@ resource "aws_lambda_permission" "simple-apigw" {
   function_name = aws_lambda_function.container_lambda.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.simple-api.execution_arn}/*/*"
+}
+
+#API Gateway
+resource "aws_apigatewayv2_api" "simple-api" {
+    name = "lambda-api"
+    protocol_type = "HTTP"
+}
+
+resource "aws_apigatewayv2_integration" "lambda" {
+    api_id = aws_apigatewayv2_api.simple-api.id
+    integration_type = "AWS_PROXY"
+    integration_uri = aws_lambda_function.container_lambda.invoke_arn
+    integration_method = "POST"
+    payload_format_version = "2.0"  
+}
+
+resource "aws_apigatewayv2_route" "default" {
+    api_id = aws_apigatewayv2_api.simple-api.id
+    route_key = "ANY /"
+    target = "intergrations/$(aws_apigatewayv2_intergration.lambda)"  
+}
+
+resource "aws_apigatewayv2_stage" "default" {
+    api_id = aws_apigatewayv2_api.simple-api.id
+    name = "$default"
+    auto_deploy = true  
 }

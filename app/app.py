@@ -1,14 +1,17 @@
-from flask import Flask, jsonify, request
+import json
 from datetime import datetime
-from mangum import Mangum
 
-app = Flask(__name__)
+def handler(event, context):
+    # REST API Gateway puts source IP here
+    ip = event.get("requestContext", {}).get("identity", {}).get("sourceIp", "unknown")
 
-@app.route("/")
-def index():
-    return jsonify({
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "ip": request.headers.get("X-Forwarded-For", request.remote_addr)
-    })
-
-handler = Mangum(app)
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": json.dumps({
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "ip": ip
+        })
+    }

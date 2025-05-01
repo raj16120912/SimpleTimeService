@@ -1,18 +1,14 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from datetime import datetime
+from mangum import Mangum
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET"])
-def home():
-    visitor_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    timestamp = datetime.utcnow().isoformat() + "Z"
+@app.route("/")
+def index():
     return jsonify({
-        "ip": visitor_ip,
-        "timestamp": timestamp
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "ip": request.headers.get("X-Forwarded-For", request.remote_addr)
     })
 
-# For AWS Lambda
-def handler(event, context):
-    from aws_lambda_wsgi import response
-    return response(app, event, context)
+handler = Mangum(app)

@@ -1,23 +1,29 @@
-FROM public.ecr.aws/lambda/python:3.9
-
-# Install useradd from shadow-utils
-RUN yum install -y shadow-utils && \
-    useradd --create-home rajp
+# Use AWS Lambda Python base image
+FROM public.ecr.aws/lambda/python:3.11
 
 # Set working directory
-WORKDIR /home/rajp
+WORKDIR /var/task
 
-# Copy your app
-COPY app.py requirements.txt ./
+# Install dependencies into the Lambda runtime path
+COPY requirements.txt .
+RUN pip install -r requirements.txt --target .
 
-# Install Python deps
-RUN pip install --no-cache-dir -r requirements.txt -t .
+# Copy application code
+COPY app.py .
 
-# Set ownership
-RUN chown -R rajp /home/rajp
+# Create user manually without useradd
+# UID 1001, GID 1001 are arbitrary non-root values
+RUN mkdir -p /home/rajp && \
+    echo 'rajp:x:1001:1001::/home/rajp:/bin/bash' >> /etc/passwd && \
+    echo 'rajp:x:1001:' >> /etc/group && \
+    chown -R 1001:1001 /home/rajp && \
+    chown -R 1001:1001 /var/task
 
-# Switch to the non-root user
-USER rajp
+# Switch to non-root user
+USER 1001
 
-# Set Lambda handler
+#EXPOSE Port
+EXPOSE 5000
+
+# Set the handler for Lambda
 CMD ["app.handler"]
